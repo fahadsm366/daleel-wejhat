@@ -1,0 +1,73 @@
+/* دليل الوجهات — design tokens. Source of truth: design/tokens.json */
+
+:root {
+  --brand: #0E5A4F;
+  --brand-deep: #0A3F38;
+  --on-brand: #FFFFFF;
+  --accent: #E3A21A;
+  --accent-ink: #8A5E00;
+  --surface-100: #F4F7F6;
+  --surface-200: #FFFFFF;
+  --ink: #13201D;
+  --muted: #566763;
+  --line: #D6E0DD;
+  --entry-free: #2E7D4F;
+  --entry-eta: #2F6FA8;
+  --entry-visa: #A4432F;
+  --focus: #E3A21A;
+
+  --font-display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", Tahoma, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-12: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-full: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand: #4FB8A6;
+    --brand-deep: #0B2B26;
+    --on-brand: #0B1A17;
+    --accent: #F0B43C;
+    --accent-ink: #F0B43C;
+    --surface-100: #0F1716;
+    --surface-200: #16211F;
+    --ink: #E6EEEC;
+    --muted: #9DB0AB;
+    --line: #26332F;
+    --entry-free: #6FCB95;
+    --entry-eta: #7DB3E6;
+    --entry-visa: #E88A74;
+    --focus: #F0B43C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --brand: #4FB8A6;
+  --brand-deep: #0B2B26;
+  --on-brand: #0B1A17;
+  --accent: #F0B43C;
+  --accent-ink: #F0B43C;
+  --surface-100: #0F1716;
+  --surface-200: #16211F;
+  --ink: #E6EEEC;
+  --muted: #9DB0AB;
+  --line: #26332F;
+  --entry-free: #6FCB95;
+  --entry-eta: #7DB3E6;
+  --entry-visa: #E88A74;
+  --focus: #F0B43C;
+  color-scheme: dark;
+}
+
+html { direction: rtl; }
+body { background: var(--surface-100); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 26px; }
+h1, h2, h3 { font-family: var(--font-display); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

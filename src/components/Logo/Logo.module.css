@@ -1,0 +1,31 @@
+.logo {
+  flex-shrink: 0;
+}
+
+.color .ring {
+  stroke: var(--brand);
+}
+.color .path {
+  stroke: var(--accent);
+}
+.color .origin {
+  fill: var(--brand);
+}
+.color .pin {
+  fill: var(--accent);
+}
+.color .pinCore {
+  fill: var(--surface-200);
+}
+
+.mono .ring,
+.mono .path {
+  stroke: currentColor;
+}
+.mono .origin,
+.mono .pin {
+  fill: currentColor;
+}
+.mono .pinCore {
+  fill: var(--brand);
+}
