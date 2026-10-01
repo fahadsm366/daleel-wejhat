@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-4);
-  padding-block: var(--space-12);
+  padding-block: var(--space-12) var(--space-6);
 }
 
 .title {
@@ -24,48 +24,14 @@
   max-width: 60ch;
 }
 
-.muted {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 500;
-}
-
 .section {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-4);
+  padding-block-end: var(--space-12);
 }
 
 .h2 {
   font-size: 22px;
   line-height: 30px;
   font-weight: 600;
-}
-
-.card {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--surface-200);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-}
-
-.cardTitle {
-  font-size: 16px;
-  line-height: 26px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--space-6);
 }
