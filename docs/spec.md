@@ -24,7 +24,7 @@
 
 | المسار | الصفحة | التوليد |
 |---|---|---|
-| `/` | الرئيسية: بحث بالدولة، مرشحات نوع الدخول والمنطقة (محفوظة في الرابط `?q=&type=&region=`)، أبرز الوجهات (الدول ذات `featured = true`) | ISR |
+| `/` | الرئيسية: بحث بالدولة، مرشحات نوع الدخول والمنطقة (محفوظة في الرابط `?q=&type=&region=`)، أبرز الوجهات (الدول ذات `featuredOrder`، مرتبة به) | ISR |
 | `/countries` | كل الدول، مع بحث وتصفية | ISR |
 | `/countries/[slug]` | صفحة الدولة (انظر 4) | SSG + ISR |
 | `/before-you-travel` | قواعد المغادرة من المملكة للمواطن والمقيم | SSG |
@@ -51,7 +51,7 @@
 
 ### 4.1 الدول المحذّر منها (`travelAdvisory = true`)
 - صفحة الدولة موجودة ومفهرسة، والتحذير بارز أعلاها.
-- تُستبعد من «أبرز الوجهات» ومن القائمة الافتراضية في الصفحة الرئيسية، حتى لو كان حقل `featured` فيها `true`.
+- تُستبعد من «أبرز الوجهات» ومن القائمة الافتراضية في الصفحة الرئيسية، حتى لو كان لها `featuredOrder`.
 - تظهر في نتائج البحث عند كتابة اسمها، مع شارة التحذير.
 - **طلب التأشيرة معطّل** لها: لا يظهر قسم «اطلب تأشيرتك»، ويرفض الخادم أي طلب لها.
 
@@ -246,8 +246,9 @@ model Country {
   arabCountry    Boolean         @default(false)
   schengen       Boolean         @default(false)
   travelAdvisory Boolean         @default(false)
-  /// يظهر في «أبرز الوجهات» بالصفحة الرئيسية، إلا إذا كان عليه تحذير سفر
-  featured       Boolean         @default(false)
+  /// ترتيب الدولة في «أبرز الوجهات» بالرئيسية (1 أولاً). null = غير مميزة.
+  /// الدولة التي عليها تحذير سفر لا تظهر هناك حتى لو كان لها ترتيب.
+  featuredOrder  Int?            @unique
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   entryRules     EntryRule[]
@@ -257,7 +258,6 @@ model Country {
   visaRequests   VisaRequest[]
 
   @@index([region])
-  @@index([featured])
 }
 
 model EntryRule {

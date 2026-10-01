@@ -22,7 +22,7 @@ export async function getCountryList(): Promise<ExplorerCountry[]> {
       nameEn: true,
       region: true,
       travelAdvisory: true,
-      featured: true,
+      featuredOrder: true,
       entryRules: {
         where: { audience: Audience.saudi_citizen, nationality: SAUDI_NATIONALITY },
         select: {

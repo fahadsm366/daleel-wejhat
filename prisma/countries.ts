@@ -26,7 +26,7 @@ export type CountryRow = {
     arabCountry: boolean;
     schengen: boolean;
     travelAdvisory: boolean;
-    featured: boolean;
+    featuredOrder: number | null;
   };
   entryRule: {
     audience: Audience;
@@ -92,6 +92,7 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
   }
 
   const seenSlugs = new Map<string, number>();
+  const seenFeaturedOrders = new Map<number, number>();
   const rows: CountryRow[] = [];
 
   list.forEach((item, i) => {
@@ -122,8 +123,15 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
     for (const key of ["arabCountry", "schengen", "travelAdvisory", "needsVerification"]) {
       if (typeof c[key] !== "boolean") err(`${key} يجب أن يكون true أو false`);
     }
-    if (c.featured !== undefined && typeof c.featured !== "boolean") {
-      err("featured يجب أن يكون true أو false إن وُجد");
+    const featuredOrder = c.featuredOrder ?? null;
+    if (featuredOrder !== null) {
+      if (!Number.isInteger(featuredOrder) || (featuredOrder as number) < 1) {
+        err(`featuredOrder يجب أن يكون عدداً صحيحاً من 1 فأكثر أو null: ${String(featuredOrder)}`);
+      } else {
+        const first = seenFeaturedOrders.get(featuredOrder as number);
+        if (first !== undefined) err(`featuredOrder مكرر مع الدولة رقم ${first + 1}`);
+        else seenFeaturedOrders.set(featuredOrder as number, i);
+      }
     }
 
     // الإعفاء المؤقت (docs/spec.md القسم 4.2): كلاهما اختياري، والحالة اللاحقة لا معنى لها بلا تاريخ انتهاء.
@@ -155,7 +163,7 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
         arabCountry: c.arabCountry as boolean,
         schengen: c.schengen as boolean,
         travelAdvisory: c.travelAdvisory as boolean,
-        featured: c.featured === true,
+        featuredOrder: featuredOrder as number | null,
       },
       entryRule: {
         audience: Audience.saudi_citizen,

@@ -73,13 +73,15 @@ export function filterCountries<T extends SearchableCountry>(
 }
 
 /**
- * دول «أبرز الوجهات» بالترتيب الذي وصلت به، دون الدول التي عليها تحذير سفر
- * حتى لو كانت مميزة في البيانات (docs/spec.md القسم 4.1).
+ * دول «أبرز الوجهات» مرتبة بـ featuredOrder، دون الدول التي عليها تحذير سفر
+ * حتى لو كان لها ترتيب في البيانات (docs/spec.md القسم 4.1).
  */
-export function featuredCountries<T extends { featured: boolean; travelAdvisory: boolean }>(
+export function featuredCountries<T extends { featuredOrder: number | null; travelAdvisory: boolean }>(
   countries: readonly T[],
 ): T[] {
-  return countries.filter((c) => c.featured && !c.travelAdvisory);
+  return countries
+    .filter((c) => c.featuredOrder !== null && !c.travelAdvisory)
+    .sort((a, b) => a.featuredOrder! - b.featuredOrder!);
 }
 
 // ───────────── حفظ البحث والمرشحات في رابط الصفحة ─────────────

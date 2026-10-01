@@ -15,7 +15,7 @@ import {
 } from "@/lib/country-search";
 import styles from "./CountryExplorer.module.css";
 
-export type ExplorerCountry = CountryCardData & { region: Region; featured: boolean };
+export type ExplorerCountry = CountryCardData & { region: Region; featuredOrder: number | null };
 
 const ENTRY_TYPES = Object.values(EntryType);
 const REGIONS = Object.values(Region);

@@ -58,18 +58,19 @@ describe("data/countries.json", () => {
     assert.ok(rows.every((r) => r.entryRule.notes !== ""));
   });
 
-  it("أبرز الوجهات ثماني دول بلا تحذير سفر", () => {
-    const featured = rows.filter((r) => r.country.featured).map((r) => r.country);
-    assert.deepEqual(featured.map((c) => c.slug).sort(), [
-      "azerbaijan",
-      "egypt",
-      "georgia",
-      "jordan",
-      "malaysia",
-      "maldives",
-      "thailand",
-      "turkey",
-    ]);
+  it("أبرز الوجهات ثماني دول بلا تحذير سفر بالترتيب المعتمد", () => {
+    const featured = rows
+      .map((r) => r.country)
+      .filter((c) => c.featuredOrder !== null)
+      .sort((a, b) => a.featuredOrder! - b.featuredOrder!);
+    assert.deepEqual(
+      featured.map((c) => c.slug),
+      ["georgia", "turkey", "azerbaijan", "malaysia", "thailand", "maldives", "egypt", "jordan"],
+    );
+    assert.deepEqual(
+      featured.map((c) => c.featuredOrder),
+      [1, 2, 3, 4, 5, 6, 7, 8],
+    );
     assert.ok(featured.every((c) => !c.travelAdvisory));
   });
 
@@ -139,10 +140,25 @@ describe("رفض الملفات غير الصالحة", () => {
     assert.ok(problemsOf(file).some((p) => p.includes("validUntil")));
   });
 
-  it("يرفض featured بقيمة غير منطقية", () => {
+  it("يرفض featuredOrder غير صحيح أو أقل من 1", () => {
     const file = copyOfFile();
-    file.countries[0]!.featured = "yes";
-    assert.ok(problemsOf(file).some((p) => p.includes("featured")));
+    file.countries[0]!.featuredOrder = "1";
+    file.countries[1]!.featuredOrder = 0;
+    file.countries[2]!.featuredOrder = 2.5;
+    const problems = problemsOf(file).filter((p) => p.includes("featuredOrder"));
+    assert.equal(problems.length, 3);
+  });
+
+  it("يرفض featuredOrder مكرراً ويذكر الدولة الأولى", () => {
+    const file = copyOfFile();
+    // جورجيا ترتيبها 1، ونعطي الترتيب نفسه لدولة بعدها في الملف.
+    const georgia = file.countries.findIndex((c) => c.slug === "georgia");
+    file.countries[georgia + 1]!.featuredOrder = 1;
+    assert.ok(
+      problemsOf(file).some(
+        (p) => p.includes(`رقم ${georgia + 2}`) && p.includes(`featuredOrder مكرر مع الدولة رقم ${georgia + 1}`),
+      ),
+    );
   });
 
   it("يرفض الملف بلا اسم مصدر", () => {

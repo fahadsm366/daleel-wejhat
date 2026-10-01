@@ -145,17 +145,28 @@ describe("filterCountries مع حالة قيد التحقق", () => {
 });
 
 describe("featuredCountries", () => {
-  it("يعيد المميزة فقط بترتيبها ويستبعد المحذّر منها", () => {
+  it("يعيد المميزة فقط مرتبة بـ featuredOrder ويستبعد المحذّر منها", () => {
+    // مرتبة أبجدياً كما تصل من getCountryList، والمتوقع ترتيب featuredOrder.
     const list = [
-      { slug: "georgia", featured: true, travelAdvisory: false },
-      { slug: "singapore", featured: false, travelAdvisory: false },
-      { slug: "yemen", featured: true, travelAdvisory: true },
-      { slug: "egypt", featured: true, travelAdvisory: false },
+      { slug: "egypt", featuredOrder: 7, travelAdvisory: false },
+      { slug: "georgia", featuredOrder: 1, travelAdvisory: false },
+      { slug: "singapore", featuredOrder: null, travelAdvisory: false },
+      { slug: "turkey", featuredOrder: 2, travelAdvisory: false },
+      { slug: "yemen", featuredOrder: 3, travelAdvisory: true },
     ];
     assert.deepEqual(
       featuredCountries(list).map((c) => c.slug),
-      ["georgia", "egypt"],
+      ["georgia", "turkey", "egypt"],
     );
+  });
+
+  it("لا يعدّل ترتيب القائمة الأصلية", () => {
+    const list = [
+      { slug: "b", featuredOrder: 2, travelAdvisory: false },
+      { slug: "a", featuredOrder: 1, travelAdvisory: false },
+    ];
+    featuredCountries(list);
+    assert.deepEqual(list.map((c) => c.slug), ["b", "a"]);
   });
 });
 
