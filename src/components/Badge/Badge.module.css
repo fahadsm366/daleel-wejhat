@@ -1,0 +1,55 @@
+/* الشارات: اللون يرافق الكلمة دائماً، ولا يحمل المعنى وحده. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: var(--surface-200);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+.free {
+  color: var(--entry-free);
+}
+.eta {
+  color: var(--entry-eta);
+}
+.visa {
+  color: var(--entry-visa);
+}
+
+/* accent تعبئة فقط، والنص بلون accent-ink حتى يُقرأ على الخلفيات الفاتحة. */
+.verify {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.verify .dot {
+  background: var(--accent);
+}
+
+/* تحذير السفر معبّأ حتى لا يُخلط بشارة «تأشيرة مسبقة» التي تشاركه اللون. */
+.advisory {
+  color: var(--on-brand);
+  border-color: var(--entry-visa);
+  background: var(--entry-visa);
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}

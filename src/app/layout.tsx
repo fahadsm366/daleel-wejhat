@@ -3,8 +3,12 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 
+// الأنماط العامة قبل المكونات حتى تتقدّم أنماط المكونات عليها.
 import "@design/tokens.css";
 import "./globals.css";
+
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import { fontVariables } from "./fonts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,7 +30,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <a className="skip-link" href="#main">
           {t("skipToContent")}
         </a>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <SiteHeader />
+          <div className="page">{children}</div>
+          <SiteFooter />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

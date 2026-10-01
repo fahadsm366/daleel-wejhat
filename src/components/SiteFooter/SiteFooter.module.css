@@ -1,0 +1,37 @@
+/* surface-200 وليس brand-deep: brand-deep مع on-brand لا يُقرآن في الوضع الداكن. */
+.footer {
+  margin-block-start: var(--space-12);
+  padding-block: var(--space-6);
+  background: var(--surface-200);
+  border-block-start: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.inner {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.disclaimer {
+  max-width: 72ch;
+}
+
+.disclaimerTitle {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.small {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
