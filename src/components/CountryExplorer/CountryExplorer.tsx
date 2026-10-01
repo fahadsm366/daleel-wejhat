@@ -1,28 +1,73 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useId, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useId, useMemo, useState } from "react";
 
 import { CountryCard, type CountryCardData } from "@/components/CountryCard";
 import { EntryType, Region } from "@/generated/prisma/enums";
-import { filterCountries } from "@/lib/country-search";
+import {
+  type CountryFilters,
+  EMPTY_FILTERS,
+  filterCountries,
+  filtersFromSearchParams,
+  filtersToSearchParams,
+} from "@/lib/country-search";
 import styles from "./CountryExplorer.module.css";
 
-export type ExplorerCountry = CountryCardData & { region: Region };
+export type ExplorerCountry = CountryCardData & { region: Region; featured: boolean };
 
 const ENTRY_TYPES = Object.values(EntryType);
 const REGIONS = Object.values(Region);
 
-/** البحث بالاسم ومرشحا نوع الدخول والمنطقة. القائمة كاملة تصل من الخادم وتُصفّى في المتصفح. */
-export function CountryExplorer({ countries }: { countries: ExplorerCountry[] }) {
+type ExplorerProps = { countries: ExplorerCountry[] };
+
+/**
+ * البحث بالاسم ومرشحا نوع الدخول والمنطقة. القائمة كاملة تصل من الخادم وتُصفّى في المتصفح.
+ * البحث والمرشحات محفوظة في رابط الصفحة (?q=&type=&region=)، فيمكن مشاركتها والرجوع إليها.
+ *
+ * الصفحة مولّدة ثابتة والرابط لا يُعرف وقت التوليد، فيُرسم الجزء الذي يقرأ الرابط داخل Suspense،
+ * وبديله القائمة نفسها بلا مرشحات حتى تبقى كل الدول في HTML المولَّد لمحركات البحث.
+ */
+export function CountryExplorer({ countries }: ExplorerProps) {
+  return (
+    <Suspense fallback={<Explorer countries={countries} initialFilters={EMPTY_FILTERS} />}>
+      <ExplorerFromUrl countries={countries} />
+    </Suspense>
+  );
+}
+
+function ExplorerFromUrl({ countries }: ExplorerProps) {
+  const searchParams = useSearchParams();
+  // الرابط يحدد الحالة الأولى فقط؛ بعدها الحالة في المكون وتُكتب في الرابط عند كل تغيير.
+  const [initialFilters] = useState(() => filtersFromSearchParams(searchParams));
+
+  return <Explorer countries={countries} initialFilters={initialFilters} onChange={writeFiltersToUrl} />;
+}
+
+/** replaceState لا يضيف خطوة في سجل المتصفح مع كل حرف يُكتب، ويتكامل مع موجّه Next.js. */
+function writeFiltersToUrl(filters: CountryFilters) {
+  const params = filtersToSearchParams(filters, new URLSearchParams(window.location.search));
+  const search = params.toString();
+  const url = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+  window.history.replaceState(window.history.state, "", url);
+}
+
+function Explorer({
+  countries,
+  initialFilters,
+  onChange,
+}: ExplorerProps & {
+  initialFilters: CountryFilters;
+  onChange?: (filters: CountryFilters) => void;
+}) {
   const t = useTranslations("search");
   const tEntry = useTranslations("entryType");
   const tRegion = useTranslations("region");
   const id = useId();
 
-  const [query, setQuery] = useState("");
-  const [entryType, setEntryType] = useState<EntryType | null>(null);
-  const [region, setRegion] = useState<Region | null>(null);
+  const [filters, setFilters] = useState(initialFilters);
+  const { query, entryType, region } = filters;
 
   const results = useMemo(
     () => filterCountries(countries, { query, entryType, region }),
@@ -30,10 +75,14 @@ export function CountryExplorer({ countries }: { countries: ExplorerCountry[] })
   );
   const hasFilters = query.trim() !== "" || entryType !== null || region !== null;
 
+  function update(changes: Partial<CountryFilters>) {
+    const next = { ...filters, ...changes };
+    setFilters(next);
+    onChange?.(next);
+  }
+
   function reset() {
-    setQuery("");
-    setEntryType(null);
-    setRegion(null);
+    update(EMPTY_FILTERS);
   }
 
   return (
@@ -48,7 +97,7 @@ export function CountryExplorer({ countries }: { countries: ExplorerCountry[] })
             type="search"
             className={styles.control}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => update({ query: e.target.value })}
             placeholder={t("queryPlaceholder")}
             autoComplete="off"
             spellCheck={false}
@@ -63,7 +112,7 @@ export function CountryExplorer({ countries }: { countries: ExplorerCountry[] })
             id={`${id}-entry`}
             className={styles.control}
             value={entryType ?? ""}
-            onChange={(e) => setEntryType((e.target.value || null) as EntryType | null)}
+            onChange={(e) => update({ entryType: (e.target.value || null) as EntryType | null })}
           >
             <option value="">{t("allEntryTypes")}</option>
             {ENTRY_TYPES.map((type) => (
@@ -82,7 +131,7 @@ export function CountryExplorer({ countries }: { countries: ExplorerCountry[] })
             id={`${id}-region`}
             className={styles.control}
             value={region ?? ""}
-            onChange={(e) => setRegion((e.target.value || null) as Region | null)}
+            onChange={(e) => update({ region: (e.target.value || null) as Region | null })}
           >
             <option value="">{t("allRegions")}</option>
             {REGIONS.map((r) => (

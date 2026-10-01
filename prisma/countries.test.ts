@@ -57,6 +57,28 @@ describe("data/countries.json", () => {
     assert.ok(withoutStay, "يوجد في الملف دول بلا مدة إقامة");
     assert.ok(rows.every((r) => r.entryRule.notes !== ""));
   });
+
+  it("أبرز الوجهات ثماني دول بلا تحذير سفر", () => {
+    const featured = rows.filter((r) => r.country.featured).map((r) => r.country);
+    assert.deepEqual(featured.map((c) => c.slug).sort(), [
+      "azerbaijan",
+      "egypt",
+      "georgia",
+      "jordan",
+      "malaysia",
+      "maldives",
+      "thailand",
+      "turkey",
+    ]);
+    assert.ok(featured.every((c) => !c.travelAdvisory));
+  });
+
+  it("إعفاء الجبل الأسود ينتهي 2026-10-31 وبعده تأشيرة مسبقة", () => {
+    const montenegro = rows.find((r) => r.country.slug === "montenegro")!.entryRule;
+    assert.equal(montenegro.entryType, "visa_free");
+    assert.equal(montenegro.validUntil?.toISOString().slice(0, 10), "2026-10-31");
+    assert.equal(montenegro.entryTypeAfter, "visa_required");
+  });
 });
 
 describe("رفض الملفات غير الصالحة", () => {
@@ -99,6 +121,28 @@ describe("رفض الملفات غير الصالحة", () => {
     const file = copyOfFile();
     file.countries[0]!.slug = "United Arab Emirates";
     assert.ok(problemsOf(file).some((p) => p.includes("slug غير صالح")));
+  });
+
+  it("يرفض entryTypeAfter بلا validUntil أو بنوع غير معروف", () => {
+    const file = copyOfFile();
+    file.countries[0]!.entryTypeAfter = "visa_required";
+    file.countries[1]!.validUntil = "2026-12-01";
+    file.countries[1]!.entryTypeAfter = "visa_maybe";
+    const problems = problemsOf(file);
+    assert.ok(problems.some((p) => p.includes("رقم 1") && p.includes("بلا validUntil")));
+    assert.ok(problems.some((p) => p.includes("رقم 2") && p.includes("entryTypeAfter غير معروف")));
+  });
+
+  it("يرفض validUntil بتاريخ غير صالح", () => {
+    const file = copyOfFile();
+    file.countries[0]!.validUntil = "31-10-2026";
+    assert.ok(problemsOf(file).some((p) => p.includes("validUntil")));
+  });
+
+  it("يرفض featured بقيمة غير منطقية", () => {
+    const file = copyOfFile();
+    file.countries[0]!.featured = "yes";
+    assert.ok(problemsOf(file).some((p) => p.includes("featured")));
   });
 
   it("يرفض الملف بلا اسم مصدر", () => {

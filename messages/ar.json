@@ -8,6 +8,7 @@
   },
   "home": {
     "intro": "اكتب اسم الدولة بالعربية أو الإنجليزية لتعرف نوع الدخول ومدة الإقامة، مع مصدر كل معلومة وتاريخ آخر تحقق.",
+    "featuredTitle": "أبرز الوجهات",
     "countriesTitle": "الدول"
   },
   "search": {
@@ -34,6 +35,9 @@
   },
   "countryCard": {
     "stay": "مدة الإقامة: {stay}",
+    "exemptionEnds": "هذا الإعفاء ينتهي في <data>{date}</data>",
+    "exemptionEnded": "انتهى الإعفاء في <data>{date}</data>",
+    "exemptionEndedUnknown": "انتهى الإعفاء في <data>{date}</data>، والحالة الحالية قيد التحقق",
     "source": "المصدر: <data>{source}</data>",
     "verifiedAt": "آخر تحقق: <data>{date}</data>"
   },

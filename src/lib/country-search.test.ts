@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { EntryType, Region } from "../generated/prisma/enums";
-import { filterCountries, normalizeSearchText, type SearchableCountry } from "./country-search";
+import {
+  EMPTY_FILTERS,
+  featuredCountries,
+  filterCountries,
+  filtersFromSearchParams,
+  filtersToSearchParams,
+  normalizeSearchText,
+  type SearchableCountry,
+} from "./country-search";
 
 describe("normalizeSearchText", () => {
   it("يوحّد الهمزات على الألف", () => {
@@ -118,5 +126,79 @@ describe("filterCountries", () => {
 
   it("لا نتائج لاسم غير موجود", () => {
     assert.deepEqual(filterCountries(COUNTRIES, { ...NO_FILTERS, query: "أطلانتس" }), []);
+  });
+});
+
+describe("filterCountries مع حالة قيد التحقق", () => {
+  const expired = country({ nameAr: "الجبل الأسود", nameEn: "Montenegro", entryType: null });
+
+  it("تظهر في القائمة الافتراضية وعند البحث باسمها", () => {
+    assert.deepEqual(names(filterCountries([expired], NO_FILTERS)), ["Montenegro"]);
+    assert.deepEqual(names(filterCountries([expired], { ...NO_FILTERS, query: "الجبل" })), ["Montenegro"]);
+  });
+
+  it("لا تطابق أي مرشح نوع دخول", () => {
+    for (const type of Object.values(EntryType)) {
+      assert.deepEqual(filterCountries([expired], { ...NO_FILTERS, entryType: type }), [], type);
+    }
+  });
+});
+
+describe("featuredCountries", () => {
+  it("يعيد المميزة فقط بترتيبها ويستبعد المحذّر منها", () => {
+    const list = [
+      { slug: "georgia", featured: true, travelAdvisory: false },
+      { slug: "singapore", featured: false, travelAdvisory: false },
+      { slug: "yemen", featured: true, travelAdvisory: true },
+      { slug: "egypt", featured: true, travelAdvisory: false },
+    ];
+    assert.deepEqual(
+      featuredCountries(list).map((c) => c.slug),
+      ["georgia", "egypt"],
+    );
+  });
+});
+
+describe("المرشحات في رابط الصفحة", () => {
+  it("يقرأ البحث والمرشحات من الرابط", () => {
+    const params = new URLSearchParams("q=%D8%AC%D9%88%D8%B1%D8%AC%D9%8A%D8%A7&type=visa_free&region=europe");
+    assert.deepEqual(filtersFromSearchParams(params), {
+      query: "جورجيا",
+      entryType: EntryType.visa_free,
+      region: Region.europe,
+    });
+  });
+
+  it("رابط بلا معاملات = بلا مرشحات", () => {
+    assert.deepEqual(filtersFromSearchParams(new URLSearchParams()), EMPTY_FILTERS);
+  });
+
+  it("يهمل القيم غير المعروفة في النوع والمنطقة", () => {
+    const params = new URLSearchParams("type=visa_maybe&region=antarctica&q=x");
+    assert.deepEqual(filtersFromSearchParams(params), { query: "x", entryType: null, region: null });
+  });
+
+  it("يكتب المرشحات المستخدمة فقط", () => {
+    const params = filtersToSearchParams({ query: "تركيا", entryType: null, region: Region.europe });
+    assert.equal(params.get("q"), "تركيا");
+    assert.equal(params.has("type"), false);
+    assert.equal(params.get("region"), "europe");
+  });
+
+  it("المرشحات الفارغة تعطي رابطاً نظيفاً، ونص المسافات يُعامل كفارغ", () => {
+    assert.equal(filtersToSearchParams(EMPTY_FILTERS).toString(), "");
+    assert.equal(filtersToSearchParams({ ...EMPTY_FILTERS, query: "  " }).toString(), "");
+  });
+
+  it("يحذف المرشح الذي أُلغي ويحافظ على المعاملات الأخرى", () => {
+    const current = new URLSearchParams("q=old&type=eta&utm_source=x");
+    const params = filtersToSearchParams({ ...EMPTY_FILTERS, region: Region.asia }, current);
+    assert.equal(params.toString(), "utm_source=x&region=asia");
+    assert.equal(current.get("q"), "old", "لا يعدّل المعاملات الأصلية");
+  });
+
+  it("القراءة بعد الكتابة تعيد المرشحات نفسها", () => {
+    const filters = { query: "كوريا الجنوبية", entryType: EntryType.eta, region: Region.asia };
+    assert.deepEqual(filtersFromSearchParams(filtersToSearchParams(filters)), filters);
   });
 });

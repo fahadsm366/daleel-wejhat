@@ -152,6 +152,8 @@ model Country {
   arabCountry    Boolean         @default(false)
   schengen       Boolean         @default(false)
   travelAdvisory Boolean         @default(false)
+  /// يظهر في «أبرز الوجهات» بالصفحة الرئيسية، إلا إذا كان عليه تحذير سفر
+  featured       Boolean         @default(false)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   entryRules     EntryRule[]
@@ -161,6 +163,7 @@ model Country {
   visaRequests   VisaRequest[]
 
   @@index([region])
+  @@index([featured])
 }
 
 model EntryRule {

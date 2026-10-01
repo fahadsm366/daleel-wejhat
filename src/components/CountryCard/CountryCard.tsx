@@ -10,8 +10,11 @@ export type CountryCardData = {
   slug: string;
   nameAr: string;
   nameEn: string;
-  entryType: EntryType;
+  /** null = انتهى إعفاء مؤقت والحالة الجديدة قيد التحقق */
+  entryType: EntryType | null;
   stay: string | null;
+  /** إعفاء مؤقت داخل مدة التنبيه أو منتهٍ (docs/spec.md القسم 4.2)، وإلا null */
+  exemption: { expired: boolean; /** YYYY-MM-DD */ validUntil: string } | null;
   travelAdvisory: boolean;
   needsVerification: boolean;
   sourceName: string;
@@ -37,9 +40,22 @@ export function CountryCard({ country }: { country: CountryCardData }) {
 
       <div className={styles.badges}>
         {country.travelAdvisory && <TravelAdvisoryBadge />}
-        <EntryTypeBadge type={country.entryType} />
+        {country.entryType && <EntryTypeBadge type={country.entryType} />}
         {country.needsVerification && <NeedsVerificationBadge />}
       </div>
+
+      {country.exemption && (
+        <p className={styles.exemption}>
+          {t.rich(exemptionMessage(country), {
+            date: country.exemption.validUntil,
+            data: (chunks) => (
+              <span dir="ltr" className={styles.data}>
+                {chunks}
+              </span>
+            ),
+          })}
+        </p>
+      )}
 
       {country.stay && <p>{t("stay", { stay: country.stay })}</p>}
 
@@ -67,4 +83,9 @@ export function CountryCard({ country }: { country: CountryCardData }) {
       </div>
     </article>
   );
+}
+
+function exemptionMessage({ entryType, exemption }: CountryCardData) {
+  if (!exemption?.expired) return "exemptionEnds";
+  return entryType ? "exemptionEnded" : "exemptionEndedUnknown";
 }

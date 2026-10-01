@@ -26,6 +26,7 @@ export type CountryRow = {
     arabCountry: boolean;
     schengen: boolean;
     travelAdvisory: boolean;
+    featured: boolean;
   };
   entryRule: {
     audience: Audience;
@@ -36,6 +37,8 @@ export type CountryRow = {
     vaccination: string | null;
     insurance: InsuranceRequirement;
     needsVerification: boolean;
+    validUntil: Date | null;
+    entryTypeAfter: EntryType | null;
     sourceName: string;
     sourceUrl: null;
     verifiedAt: Date;
@@ -119,6 +122,24 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
     for (const key of ["arabCountry", "schengen", "travelAdvisory", "needsVerification"]) {
       if (typeof c[key] !== "boolean") err(`${key} يجب أن يكون true أو false`);
     }
+    if (c.featured !== undefined && typeof c.featured !== "boolean") {
+      err("featured يجب أن يكون true أو false إن وُجد");
+    }
+
+    // الإعفاء المؤقت (docs/spec.md القسم 4.2): كلاهما اختياري، والحالة اللاحقة لا معنى لها بلا تاريخ انتهاء.
+    const validUntil = c.validUntil == null ? null : parseDate(c.validUntil);
+    if (c.validUntil != null && !validUntil) {
+      err(`validUntil ليس تاريخاً بصيغة YYYY-MM-DD: ${String(c.validUntil)}`);
+    }
+    if (c.entryTypeAfter != null) {
+      if (!isEnumValue(EntryType, c.entryTypeAfter)) {
+        err(`entryTypeAfter غير معروف: ${String(c.entryTypeAfter)}`);
+      } else if (c.validUntil == null) {
+        err("entryTypeAfter موجود بلا validUntil");
+      } else if (c.entryTypeAfter === c.entryType) {
+        err("entryTypeAfter يساوي entryType الحالي");
+      }
+    }
 
     const verifiedAt = parseDate(c.verifiedAt);
     if (!verifiedAt) err(`verifiedAt ليس تاريخاً بصيغة YYYY-MM-DD: ${String(c.verifiedAt)}`);
@@ -134,6 +155,7 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
         arabCountry: c.arabCountry as boolean,
         schengen: c.schengen as boolean,
         travelAdvisory: c.travelAdvisory as boolean,
+        featured: c.featured === true,
       },
       entryRule: {
         audience: Audience.saudi_citizen,
@@ -144,6 +166,8 @@ export function parseCountriesFile(json: unknown): CountryRow[] {
         vaccination: optionalText(c.vaccination),
         insurance: c.insurance as InsuranceRequirement,
         needsVerification: c.needsVerification as boolean,
+        validUntil,
+        entryTypeAfter: (c.entryTypeAfter as EntryType | undefined) ?? null,
         sourceName: sourceName!,
         // الملف لا يحوي روابط رسمية؛ هذه السجلات تظهر لاحقاً في قائمة «يحتاج مصدراً رسمياً».
         sourceUrl: null,
