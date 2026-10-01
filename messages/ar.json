@@ -14,5 +14,25 @@
     "fontSans": "نص بخط IBM Plex Sans Arabic: جوازك يجب أن يكون صالحاً 6 أشهر من تاريخ المغادرة.",
     "fontMono": "آخر تحقق: <data>{date}</data>",
     "colorsTitle": "الألوان"
+  },
+  "entryType": {
+    "gcc": "حرية تنقل (خليجي)",
+    "visa_free": "بدون تأشيرة",
+    "eta": "تصريح إلكتروني (ETA)",
+    "visa_on_arrival": "تأشيرة عند الوصول",
+    "evisa_or_voa": "إلكترونية أو عند الوصول",
+    "evisa": "تأشيرة إلكترونية",
+    "visa_required": "تأشيرة مسبقة (سفارة)"
+  },
+  "region": {
+    "gulf": "الخليج",
+    "middle_east": "الشرق الأوسط",
+    "africa": "أفريقيا",
+    "europe": "أوروبا",
+    "asia": "آسيا",
+    "north_central_america": "أمريكا الشمالية والوسطى",
+    "caribbean": "الكاريبي",
+    "south_america": "أمريكا الجنوبية",
+    "oceania": "أوقيانوسيا"
   }
 }

@@ -39,15 +39,30 @@
 
 ## 4. صفحة الدولة
 بالترتيب من الأعلى:
-1. الاسم، ونوع الدخول (لون + كلمة)، ومدة الإقامة، وتاريخ آخر تحقق، وشارة «تحتاج تحقق» عند اللزوم.
-2. تحذير السفر الرسمي إن وُجد، بارزاً.
+1. الاسم، ونوع الدخول (لون + كلمة)، ومدة الإقامة، والمصدر وتاريخ آخر تحقق، وشارة «تحتاج تحقق» عند اللزوم، وتنبيه انتهاء الإعفاء المؤقت إن وُجد (انظر 4.2).
+2. تحذير السفر الرسمي إن وُجد، بارزاً (انظر 4.1).
 3. **الدخول والشروط**: الملاحظات، الرسوم، التطعيمات، التأمين (إلزامي/موصى به)، شنغن.
 4. **قائمة ما قبل السفر**: تتولد تلقائياً (انظر 5).
 5. **المحظورات** (ما تحمله): مقسمة حسب التصنيف، ولكل بند درجة: ممنوع / يحتاج تصريح / يجب الإفصاح.
 6. **السياسات الداخلية** (ما تفعله): مقسمة حسب المحور، ولكل بند درجة: مخالفة جنائية / غرامة / تنبيه. المخالفات الجنائية أولاً.
-7. **اطلب تأشيرتك**: يظهر فقط إذا كان نوع الدخول `evisa` أو `evisa_or_voa` أو `visa_required` أو `eta`، مع عدد المكاتب المتاحة وأفضل تقييم.
+7. **اطلب تأشيرتك**: يظهر فقط إذا كان نوع الدخول `evisa` أو `evisa_or_voa` أو `visa_required` أو `eta`، **ولم يكن على الدولة تحذير سفر** (`travelAdvisory`)، مع عدد المكاتب المتاحة وأفضل تقييم.
 8. **تجارب الدخول** (المرحلة الثانية).
 9. المصادر وإخلاء المسؤولية.
+
+### 4.1 الدول المحذّر منها (`travelAdvisory = true`)
+- صفحة الدولة موجودة ومفهرسة، والتحذير بارز أعلاها.
+- تُستبعد من «أبرز الوجهات» ومن القائمة الافتراضية في الصفحة الرئيسية.
+- تظهر في نتائج البحث عند كتابة اسمها، مع شارة التحذير.
+- **طلب التأشيرة معطّل** لها: لا يظهر قسم «اطلب تأشيرتك»، ويرفض الخادم أي طلب لها.
+
+### 4.2 الإعفاءات المؤقتة (`validUntil` و `entryTypeAfter`)
+- `validUntil`: آخر يوم تصح فيه الحالة الحالية. `entryTypeAfter`: الحالة بعده إن كانت معروفة.
+- **تنبيه في لوحة الإدارة قبل الانتهاء**: قائمة «إعفاءات تقترب من الانتهاء» تظهر فيها الدولة قبل 30 يوماً من `validUntil` مع عدد الأيام المتبقية، ويصبح التنبيه عاجلاً قبل 7 أيام. مدة التنبيه إعداد قابل للتعديل، لا رقم ثابت في الكود.
+- **خلال الثلاثين يوماً**: صفحة الدولة تعرض للمسافر «هذا الإعفاء ينتهي في [التاريخ]».
+- **بعد الانتهاء، إذا كانت `entryTypeAfter` معروفة**: تعرض الصفحة الحالة الجديدة تلقائياً.
+- **بعد الانتهاء، إذا لم تكن معروفة**: تختفي الحالة القديمة، ويظهر «انتهى الإعفاء في [التاريخ]، والحالة الحالية قيد التحقق» مع شارة «تحتاج تحقق»، وتبقى الدولة في قائمة الإدارة حتى يُحدَّث سجلها.
+- إعادة توليد صفحات الدول (ISR) يومية على الأقل، حتى يتغير العرض في يوم الانتهاء دون تدخل يدوي.
+- المنطق دالة واحدة مختبرة: قبل التنبيه، داخل التنبيه، داخل التنبيه العاجل، بعد الانتهاء مع حالة معروفة، بعده بلا حالة معروفة.
 
 ## 5. قائمة ما قبل السفر (منطق التوليد)
 - `gcc`: «هوية وطنية أصلية صالحة أكثر من 3 أشهر، أو الجواز». غير ذلك: «جواز صالح 3 أشهر» إذا `arabCountry`، وإلا «6 أشهر»، محسوبة من تاريخ المغادرة.
@@ -74,154 +89,442 @@
 
 **الاسترداد**: سياسة مكتوبة تحدد متى يُسترد المبلغ (قبل بدء المكتب بالعمل)، ويتم الاسترداد عبر البوابة نفسها.
 
-## 7. نموذج البيانات (Prisma، مبدئي)
+## 7. نموذج البيانات (Prisma)
+
+المرجع التنفيذي هو `prisma/schema.prisma`، وهذا القسم يُحدَّث معه. قرارات النموذج:
+- **المصدر لكل معلومة**: `sourceName` إلزامي و `sourceUrl` اختياري. السجل بلا رابط رسمي يظهر في قائمة الإدارة «يحتاج مصدراً رسمياً».
+- **الجنسية إلزامية** في `EntryRule`، والمواطن السعودي = `"SA"`، حتى يعمل القيد الفريد (PostgreSQL لا يعدّ القيم الفارغة مكررة).
+- **الحالات والتصنيفات أنواع محددة (enum)** لا نص حر. ودرجات المحظورات (`ProhibitionSeverity`) منفصلة عن درجات السياسات (`PolicySeverity`).
+- **العلاقات صريحة**، والحذف مقيّد (`Restrict`) لكل ما يتصل بالطلبات والمال، فلا يُحذف سجل مالي بالتسلسل.
+- **`Office.commissionRate` فارغة** تعني النسبة الافتراضية العامة. النسبة تُنسخ في `Offer` وقت الإرسال ولا تتغير بعدها.
+- **قيود CHECK في قاعدة البيانات** (ملف الترحيل `init`): المبالغ بالهللات موجبة، والعمولة لا تتجاوز المبلغ، والنسب بين 0 و 1، والتقييم من 1 إلى 5، وعدد المسافرين 1 فأكثر، والجنسية رمز من حرفين، و `entryTypeAfter` لا يوجد دون `validUntil`، ورد المكتب ووقته يأتيان معاً.
+- **جداول تنفّذ قواعد CLAUDE.md**: `Message` (التواصل قبل الدفع داخل المنصة)، `Document` (مرجع المستند المشفّر وموعد حذفه)، `AuditLog` (سجل التدقيق).
+- **مؤجلة إلى مهامها**: رموز التحقق والجلسات (المهمة 12)، الإشعارات (19)، تفاصيل الفاتورة الإلكترونية (20)، النسبة الافتراضية للعمولة (13).
+- **ترجمات المناطق وأنواع الدخول** في `messages/ar.json` لا في قاعدة البيانات.
 
 ```prisma
-enum EntryType { gcc visa_free eta visa_on_arrival evisa_or_voa evisa visa_required }
-enum Audience  { saudi_citizen resident }
-enum Severity  { prohibited permit_required declare criminal fine notice }
-enum Role      { traveler office admin }
+// ───────────── الأنواع ─────────────
+
+enum EntryType {
+  gcc
+  visa_free
+  eta
+  visa_on_arrival
+  evisa_or_voa
+  evisa
+  visa_required
+}
+
+enum Audience {
+  saudi_citizen
+  resident
+}
+
+enum Region {
+  gulf
+  middle_east
+  africa
+  europe
+  asia
+  north_central_america
+  caribbean
+  south_america
+  oceania
+}
+
+enum InsuranceRequirement {
+  mandatory_for_visa
+  required_on_entry_verify
+  recommended
+}
+
+enum ProhibitionCategory {
+  medicine
+  devices
+  food
+  cash
+  other
+}
+
+/// ما تحمله: ممنوع / يحتاج تصريح / يجب الإفصاح
+enum ProhibitionSeverity {
+  prohibited
+  permit_required
+  declare
+}
+
+enum PolicyTopic {
+  registration
+  driving
+  conduct
+  work
+  money
+  telecom
+  emergency
+}
+
+/// ما تفعله: مخالفة جنائية / غرامة / تنبيه
+enum PolicySeverity {
+  criminal
+  fine
+  notice
+}
+
+enum Role {
+  traveler
+  office
+  admin
+}
+
+enum OfficeKind {
+  visa
+  travel
+  insurance
+}
+
+enum RequestStatus {
+  draft
+  submitted
+  offers_received
+  offer_accepted
+  paid
+  in_progress
+  completed
+  rejected_by_embassy
+  cancelled
+  refunded
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  declined
+  expired
+  withdrawn
+}
+
+enum PaymentStatus {
+  pending
+  captured
+  refunded
+  failed
+}
+
+enum ReviewOutcome {
+  approved
+  rejected
+}
+
+enum ReviewStatus {
+  pending
+  published
+  hidden
+}
+
+enum DocumentKind {
+  passport
+  residence_permit
+  photo
+  other
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+}
+
+// ───────────── الدول ومعلومات الدخول ─────────────
 
 model Country {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  nameAr           String
-  nameEn           String
-  region           String
-  arabCountry      Boolean  @default(false)
-  schengen         Boolean  @default(false)
-  travelAdvisory   Boolean  @default(false)
-  entryRules       EntryRule[]
-  prohibitions     Prohibition[]
-  policies         LocalPolicy[]
-  offices          OfficeCountry[]
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  nameAr         String
+  nameEn         String
+  region         Region
+  arabCountry    Boolean         @default(false)
+  schengen       Boolean         @default(false)
+  travelAdvisory Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  entryRules     EntryRule[]
+  prohibitions   Prohibition[]
+  policies       LocalPolicy[]
+  offices        OfficeCountry[]
+  visaRequests   VisaRequest[]
+
+  @@index([region])
 }
 
 model EntryRule {
-  id                String    @id @default(cuid())
-  countryId         String
-  country           Country   @relation(fields: [countryId], references: [id])
-  audience          Audience
-  nationality       String?   // ISO-3166 alpha-2, للمقيم فقط
-  entryType         EntryType
-  stay              String?
-  notes             String?
-  fees              String?
-  vaccination       String?
-  insurance         String    // mandatory_for_visa | required_on_entry_verify | recommended
-  residencyMinMonths Int?     // للمقيم: أقل صلاحية إقامة متبقية
-  professions       String[]  // للمقيم: المهن المشروطة إن وُجدت
-  needsVerification Boolean   @default(false)
-  sourceUrl         String?
-  verifiedAt        DateTime
+  id                 String               @id @default(cuid())
+  countryId          String
+  country            Country              @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  audience           Audience
+  /// ISO-3166 alpha-2 لجواز المسافر. المواطن السعودي = "SA".
+  nationality        String
+  entryType          EntryType
+  stay               String?
+  notes              String?
+  fees               String?
+  vaccination        String?
+  insurance          InsuranceRequirement
+  /// للمقيم: أقل صلاحية إقامة متبقية بالأشهر
+  residencyMinMonths Int?
+  /// للمقيم: المهن المشروطة إن وجدت
+  professions        String[]
+  needsVerification  Boolean              @default(false)
+  /// آخر يوم تصح فيه الحالة الحالية (إعفاء مؤقت)
+  validUntil         DateTime?            @db.Date
+  /// الحالة بعد validUntil إن كانت معروفة
+  entryTypeAfter     EntryType?
+  sourceName         String
+  sourceUrl          String?
+  verifiedAt         DateTime             @db.Date
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
   @@unique([countryId, audience, nationality])
+  @@index([entryType])
+  @@index([validUntil])
 }
 
-model Prohibition {  // ما تحمله
-  id         String   @id @default(cuid())
+/// ما تحمله
+model Prohibition {
+  id         String              @id @default(cuid())
   countryId  String
-  country    Country  @relation(fields: [countryId], references: [id])
-  category   String   // medicine | devices | food | cash | other
+  country    Country             @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  category   ProhibitionCategory
   item       String
-  severity   Severity // prohibited | permit_required | declare
+  severity   ProhibitionSeverity
   details    String?
   sourceUrl  String
-  verifiedAt DateTime
+  verifiedAt DateTime            @db.Date
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([countryId])
 }
 
-model LocalPolicy {  // ما تفعله
-  id         String   @id @default(cuid())
+/// ما تفعله
+model LocalPolicy {
+  id         String         @id @default(cuid())
   countryId  String
-  country    Country  @relation(fields: [countryId], references: [id])
-  topic      String   // registration | driving | conduct | work | money | telecom | emergency
+  country    Country        @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  topic      PolicyTopic
   title      String
-  severity   Severity // criminal | fine | notice
+  severity   PolicySeverity
   details    String
   sourceUrl  String
-  verifiedAt DateTime
+  verifiedAt DateTime       @db.Date
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([countryId])
 }
 
+// ───────────── المستخدمون والمكاتب ─────────────
+
 model User {
-  id        String  @id @default(cuid())
-  phone     String  @unique
-  name      String?
-  role      Role    @default(traveler)
-  officeId  String?
+  id           String        @id @default(cuid())
+  /// بصيغة E.164، مثال +9665XXXXXXXX
+  phone        String        @unique
+  name         String?
+  role         Role          @default(traveler)
+  officeId     String?
+  office       Office?       @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  visaRequests VisaRequest[]
+  reviews      Review[]
+  messages     Message[]
+  documents    Document[]
+  auditLogs    AuditLog[]
+
+  @@index([officeId])
 }
 
 model Office {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   nameAr          String
-  kind            String   // visa | travel | insurance
-  licenseNumber   String   @unique
-  licenseVerified Boolean  @default(false)
-  commissionRate  Decimal  // مثال 0.10
-  payoutAccountId String?  // معرّف الحساب لدى بوابة الدفع
-  active          Boolean  @default(false)
+  kind            OfficeKind
+  licenseNumber   String          @unique
+  licenseVerified Boolean         @default(false)
+  /// فارغة = تستخدم النسبة الافتراضية العامة. مثال 0.1000 = 10%
+  commissionRate  Decimal?        @db.Decimal(5, 4)
+  /// معرّف الحساب لدى بوابة الدفع
+  payoutAccountId String?
+  active          Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  users           User[]
   countries       OfficeCountry[]
+  offers          Offer[]
+  reviews         Review[]
+  messages        Message[]
 }
 
 model OfficeCountry {
   officeId  String
   countryId String
-  office    Office  @relation(fields: [officeId], references: [id])
-  country   Country @relation(fields: [countryId], references: [id])
+  office    Office  @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
   @@id([officeId, countryId])
+  @@index([countryId])
 }
 
+// ───────────── طلب التأشيرة والعروض والدفع ─────────────
+
 model VisaRequest {
-  id           String   @id @default(cuid())
-  travelerId   String
-  countryId    String
-  visaType     String
-  travelDate   DateTime
-  travelers    Int
-  nationality  String
-  city         String
-  status       String   // انظر حالات الطلب في القسم 6
-  acceptedOfferId String?
-  createdAt    DateTime @default(now())
+  id              String        @id @default(cuid())
+  travelerId      String
+  traveler        User          @relation(fields: [travelerId], references: [id], onDelete: Restrict)
+  countryId       String
+  country         Country       @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  visaType        String
+  travelDate      DateTime      @db.Date
+  travelers       Int
+  /// ISO-3166 alpha-2
+  nationality     String
+  city            String
+  status          RequestStatus @default(draft)
+  acceptedOfferId String?       @unique
+  acceptedOffer   Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id], onDelete: Restrict)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  offers          Offer[]       @relation("RequestOffers")
+  payment         Payment?
+  review          Review?
+  messages        Message[]
+  documents       Document[]
+
+  @@index([travelerId])
+  @@index([countryId])
+  @@index([status])
 }
 
 model Offer {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   requestId      String
+  request        VisaRequest  @relation("RequestOffers", fields: [requestId], references: [id], onDelete: Restrict)
   officeId       String
-  priceHalalas   Int      // المبالغ بالهللات دائماً، لا أرقام عشرية
-  commissionRate Decimal  // تُنسخ من المكتب وقت الإرسال
+  office         Office       @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  /// المبالغ بالهللات دائماً، لا أرقام عشرية
+  priceHalalas   Int
+  /// تنسخ من المكتب أو من النسبة الافتراضية وقت الإرسال، ولا تتغير بعدها
+  commissionRate Decimal      @db.Decimal(5, 4)
   durationDays   Int
   includes       String
   validUntil     DateTime
+  status         OfferStatus  @default(pending)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  acceptedFor    VisaRequest? @relation("AcceptedOffer")
+  payment        Payment?
+
+  @@unique([requestId, officeId])
+  @@index([officeId])
 }
 
 model Payment {
-  id               String  @id @default(cuid())
-  requestId        String  @unique
-  gatewayRef       String  @unique
-  amountHalalas    Int
+  id                String        @id @default(cuid())
+  requestId         String        @unique
+  request           VisaRequest   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  offerId           String        @unique
+  offer             Offer         @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  gatewayRef        String        @unique
+  amountHalalas     Int
   commissionHalalas Int
-  status           String  // pending | captured | refunded | failed
-  invoiceNumber    String?
+  status            PaymentStatus @default(pending)
+  invoiceNumber     String?       @unique
+  createdAt         DateTime      @default(now())
+  capturedAt        DateTime?
+  updatedAt         DateTime      @updatedAt
 }
 
+/// تقييم واحد لكل طلب مدفوع
 model Review {
-  id          String   @id @default(cuid())
-  requestId   String   @unique   // تقييم واحد لكل طلب مدفوع
-  officeId    String
-  speed       Int
-  priceKept   Int
+  id            String        @id @default(cuid())
+  requestId     String        @unique
+  request       VisaRequest   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  officeId      String
+  office        Office        @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  travelerId    String
+  traveler      User          @relation(fields: [travelerId], references: [id], onDelete: Restrict)
+  speed         Int
+  priceKept     Int
   communication Int
-  outcome     String   // approved | rejected
-  text        String?
-  officeReply String?
-  status      String   // pending | published | hidden
+  outcome       ReviewOutcome
+  text          String?
+  /// رد المكتب مرة واحدة: لا يكتب إذا كان officeReplyAt موجوداً
+  officeReply   String?
+  officeReplyAt DateTime?
+  status        ReviewStatus  @default(pending)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([officeId, status])
+}
+
+// ───────────── الرسائل والمستندات والتدقيق ─────────────
+
+/// رسائل ما قبل الدفع داخل المنصة. المحادثة = طلب + مكتب.
+model Message {
+  id        String      @id @default(cuid())
+  requestId String
+  request   VisaRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  officeId  String
+  office    Office      @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  senderId  String
+  sender    User        @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([requestId, officeId, createdAt])
+}
+
+/// المستند نفسه في تخزين خاص مشفر، وهنا مرجعه فقط.
+model Document {
+  id           String       @id @default(cuid())
+  requestId    String
+  request      VisaRequest  @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  kind         DocumentKind
+  storageKey   String       @unique
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime     @default(now())
+  /// موعد الحذف المقرر حسب سياسة الاحتفاظ
+  deleteAfter  DateTime?
+  deletedAt    DateTime?
+
+  @@index([requestId])
+  @@index([deleteAfter])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  actorId   String?
+  actor     User?       @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  entity    String
+  entityId  String
+  action    AuditAction
+  before    Json?
+  after     Json?
+  createdAt DateTime    @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
 }
 ```
 
 ## 8. استيراد البيانات
-- `data/countries.json` يُستورد عبر سكربت `prisma/seed.ts` إلى `Country` و `EntryRule` (audience = saudi_citizen).
+- `data/countries.json` يُستورد عبر سكربت `prisma/seed.ts` إلى `Country` و `EntryRule` (audience = saudi_citizen، nationality = SA). `sourceName` = المصدر العام في الملف حتى يُستبدل بمصدر رسمي.
+- تواريخ الإعفاءات المؤقتة المعروفة تُعبّأ في الاستيراد: الجبل الأسود حتى 2026-10-31 ثم `visa_required`، الصين حتى 2026-12-31، أذربيجان حتى 2027-02-15.
 - المحظورات والسياسات تُدخل من لوحة الإدارة، مصدراً رسمياً لكل بند.
-- لوحة الإدارة تعرض قائمة «تحتاج تحقق» وقائمة «أقدم تحقق» لتحديث البيانات دورياً.
+- لوحة الإدارة تعرض قوائم: «تحتاج تحقق»، «أقدم تحقق»، «يحتاج مصدراً رسمياً»، «إعفاءات تقترب من الانتهاء» (انظر 4.2).
 
 ## 9. الأمان والامتثال
 - الدخول برقم الجوال ورمز تحقق (OTP). الأدوار: مسافر، مكتب، إدارة.

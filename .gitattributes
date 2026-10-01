@@ -1,0 +1,12 @@
+# تثبيت نهايات الأسطر LF في المستودع وعلى كل الأجهزة، بغض النظر عن إعداد autocrlf.
+* text=auto eol=lf
+
+# ملفات ثنائية لا تُعدَّل نهاياتها
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

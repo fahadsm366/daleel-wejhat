@@ -1,0 +1,427 @@
+// نموذج بيانات «دليل الوجهات». المرجع التفصيلي: docs/spec.md القسم 7.
+// قيود CHECK (المبالغ، النسب، التقييمات، الجنسية) مضافة يدوياً في ملف الترحيل init.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────── الأنواع ─────────────
+
+enum EntryType {
+  gcc
+  visa_free
+  eta
+  visa_on_arrival
+  evisa_or_voa
+  evisa
+  visa_required
+}
+
+enum Audience {
+  saudi_citizen
+  resident
+}
+
+enum Region {
+  gulf
+  middle_east
+  africa
+  europe
+  asia
+  north_central_america
+  caribbean
+  south_america
+  oceania
+}
+
+enum InsuranceRequirement {
+  mandatory_for_visa
+  required_on_entry_verify
+  recommended
+}
+
+enum ProhibitionCategory {
+  medicine
+  devices
+  food
+  cash
+  other
+}
+
+/// ما تحمله: ممنوع / يحتاج تصريح / يجب الإفصاح
+enum ProhibitionSeverity {
+  prohibited
+  permit_required
+  declare
+}
+
+enum PolicyTopic {
+  registration
+  driving
+  conduct
+  work
+  money
+  telecom
+  emergency
+}
+
+/// ما تفعله: مخالفة جنائية / غرامة / تنبيه
+enum PolicySeverity {
+  criminal
+  fine
+  notice
+}
+
+enum Role {
+  traveler
+  office
+  admin
+}
+
+enum OfficeKind {
+  visa
+  travel
+  insurance
+}
+
+enum RequestStatus {
+  draft
+  submitted
+  offers_received
+  offer_accepted
+  paid
+  in_progress
+  completed
+  rejected_by_embassy
+  cancelled
+  refunded
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  declined
+  expired
+  withdrawn
+}
+
+enum PaymentStatus {
+  pending
+  captured
+  refunded
+  failed
+}
+
+enum ReviewOutcome {
+  approved
+  rejected
+}
+
+enum ReviewStatus {
+  pending
+  published
+  hidden
+}
+
+enum DocumentKind {
+  passport
+  residence_permit
+  photo
+  other
+}
+
+enum AuditAction {
+  create
+  update
+  delete
+}
+
+// ───────────── الدول ومعلومات الدخول ─────────────
+
+model Country {
+  id             String          @id @default(cuid())
+  slug           String          @unique
+  nameAr         String
+  nameEn         String
+  region         Region
+  arabCountry    Boolean         @default(false)
+  schengen       Boolean         @default(false)
+  travelAdvisory Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  entryRules     EntryRule[]
+  prohibitions   Prohibition[]
+  policies       LocalPolicy[]
+  offices        OfficeCountry[]
+  visaRequests   VisaRequest[]
+
+  @@index([region])
+}
+
+model EntryRule {
+  id                 String               @id @default(cuid())
+  countryId          String
+  country            Country              @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  audience           Audience
+  /// ISO-3166 alpha-2 لجواز المسافر. المواطن السعودي = "SA".
+  nationality        String
+  entryType          EntryType
+  stay               String?
+  notes              String?
+  fees               String?
+  vaccination        String?
+  insurance          InsuranceRequirement
+  /// للمقيم: أقل صلاحية إقامة متبقية بالأشهر
+  residencyMinMonths Int?
+  /// للمقيم: المهن المشروطة إن وجدت
+  professions        String[]
+  needsVerification  Boolean              @default(false)
+  /// آخر يوم تصح فيه الحالة الحالية (إعفاء مؤقت)
+  validUntil         DateTime?            @db.Date
+  /// الحالة بعد validUntil إن كانت معروفة
+  entryTypeAfter     EntryType?
+  sourceName         String
+  sourceUrl          String?
+  verifiedAt         DateTime             @db.Date
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@unique([countryId, audience, nationality])
+  @@index([entryType])
+  @@index([validUntil])
+}
+
+/// ما تحمله
+model Prohibition {
+  id         String              @id @default(cuid())
+  countryId  String
+  country    Country             @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  category   ProhibitionCategory
+  item       String
+  severity   ProhibitionSeverity
+  details    String?
+  sourceUrl  String
+  verifiedAt DateTime            @db.Date
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([countryId])
+}
+
+/// ما تفعله
+model LocalPolicy {
+  id         String         @id @default(cuid())
+  countryId  String
+  country    Country        @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  topic      PolicyTopic
+  title      String
+  severity   PolicySeverity
+  details    String
+  sourceUrl  String
+  verifiedAt DateTime       @db.Date
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([countryId])
+}
+
+// ───────────── المستخدمون والمكاتب ─────────────
+
+model User {
+  id           String        @id @default(cuid())
+  /// بصيغة E.164، مثال +9665XXXXXXXX
+  phone        String        @unique
+  name         String?
+  role         Role          @default(traveler)
+  officeId     String?
+  office       Office?       @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  visaRequests VisaRequest[]
+  reviews      Review[]
+  messages     Message[]
+  documents    Document[]
+  auditLogs    AuditLog[]
+
+  @@index([officeId])
+}
+
+model Office {
+  id              String          @id @default(cuid())
+  nameAr          String
+  kind            OfficeKind
+  licenseNumber   String          @unique
+  licenseVerified Boolean         @default(false)
+  /// فارغة = تستخدم النسبة الافتراضية العامة. مثال 0.1000 = 10%
+  commissionRate  Decimal?        @db.Decimal(5, 4)
+  /// معرّف الحساب لدى بوابة الدفع
+  payoutAccountId String?
+  active          Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  users           User[]
+  countries       OfficeCountry[]
+  offers          Offer[]
+  reviews         Review[]
+  messages        Message[]
+}
+
+model OfficeCountry {
+  officeId  String
+  countryId String
+  office    Office  @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  @@id([officeId, countryId])
+  @@index([countryId])
+}
+
+// ───────────── طلب التأشيرة والعروض والدفع ─────────────
+
+model VisaRequest {
+  id              String        @id @default(cuid())
+  travelerId      String
+  traveler        User          @relation(fields: [travelerId], references: [id], onDelete: Restrict)
+  countryId       String
+  country         Country       @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  visaType        String
+  travelDate      DateTime      @db.Date
+  travelers       Int
+  /// ISO-3166 alpha-2
+  nationality     String
+  city            String
+  status          RequestStatus @default(draft)
+  acceptedOfferId String?       @unique
+  acceptedOffer   Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id], onDelete: Restrict)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  offers          Offer[]       @relation("RequestOffers")
+  payment         Payment?
+  review          Review?
+  messages        Message[]
+  documents       Document[]
+
+  @@index([travelerId])
+  @@index([countryId])
+  @@index([status])
+}
+
+model Offer {
+  id             String       @id @default(cuid())
+  requestId      String
+  request        VisaRequest  @relation("RequestOffers", fields: [requestId], references: [id], onDelete: Restrict)
+  officeId       String
+  office         Office       @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  /// المبالغ بالهللات دائماً، لا أرقام عشرية
+  priceHalalas   Int
+  /// تنسخ من المكتب أو من النسبة الافتراضية وقت الإرسال، ولا تتغير بعدها
+  commissionRate Decimal      @db.Decimal(5, 4)
+  durationDays   Int
+  includes       String
+  validUntil     DateTime
+  status         OfferStatus  @default(pending)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  acceptedFor    VisaRequest? @relation("AcceptedOffer")
+  payment        Payment?
+
+  @@unique([requestId, officeId])
+  @@index([officeId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  requestId         String        @unique
+  request           VisaRequest   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  offerId           String        @unique
+  offer             Offer         @relation(fields: [offerId], references: [id], onDelete: Restrict)
+  gatewayRef        String        @unique
+  amountHalalas     Int
+  commissionHalalas Int
+  status            PaymentStatus @default(pending)
+  invoiceNumber     String?       @unique
+  createdAt         DateTime      @default(now())
+  capturedAt        DateTime?
+  updatedAt         DateTime      @updatedAt
+}
+
+/// تقييم واحد لكل طلب مدفوع
+model Review {
+  id            String        @id @default(cuid())
+  requestId     String        @unique
+  request       VisaRequest   @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  officeId      String
+  office        Office        @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  travelerId    String
+  traveler      User          @relation(fields: [travelerId], references: [id], onDelete: Restrict)
+  speed         Int
+  priceKept     Int
+  communication Int
+  outcome       ReviewOutcome
+  text          String?
+  /// رد المكتب مرة واحدة: لا يكتب إذا كان officeReplyAt موجوداً
+  officeReply   String?
+  officeReplyAt DateTime?
+  status        ReviewStatus  @default(pending)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([officeId, status])
+}
+
+// ───────────── الرسائل والمستندات والتدقيق ─────────────
+
+/// رسائل ما قبل الدفع داخل المنصة. المحادثة = طلب + مكتب.
+model Message {
+  id        String      @id @default(cuid())
+  requestId String
+  request   VisaRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  officeId  String
+  office    Office      @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  senderId  String
+  sender    User        @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  body      String
+  createdAt DateTime    @default(now())
+
+  @@index([requestId, officeId, createdAt])
+}
+
+/// المستند نفسه في تخزين خاص مشفر، وهنا مرجعه فقط.
+model Document {
+  id           String       @id @default(cuid())
+  requestId    String
+  request      VisaRequest  @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  kind         DocumentKind
+  storageKey   String       @unique
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime     @default(now())
+  /// موعد الحذف المقرر حسب سياسة الاحتفاظ
+  deleteAfter  DateTime?
+  deletedAt    DateTime?
+
+  @@index([requestId])
+  @@index([deleteAfter])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  actorId   String?
+  actor     User?       @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  entity    String
+  entityId  String
+  action    AuditAction
+  before    Json?
+  after     Json?
+  createdAt DateTime    @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}

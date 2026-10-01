@@ -10,3 +10,6 @@ dist/
 Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
+
+# عميل Prisma المولَّد (يُعاد توليده بـ npm install أو npm run db:generate)
+/src/generated/
