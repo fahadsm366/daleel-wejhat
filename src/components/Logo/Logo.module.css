@@ -2,30 +2,22 @@
   flex-shrink: 0;
 }
 
-.color .ring {
+/* الدبوس بلون ink: كحلي في الفاتح كما في mark-color.svg، وفاتح في الداكن حتى لا يختفي. */
+.color .path {
   stroke: var(--brand);
 }
-.color .path {
-  stroke: var(--accent);
-}
-.color .origin {
-  fill: var(--brand);
-}
 .color .pin {
-  fill: var(--accent);
-}
-.color .pinCore {
-  fill: var(--surface-200);
+  fill: var(--ink);
 }
 
-.mono .ring,
 .mono .path {
   stroke: currentColor;
 }
-.mono .origin,
 .mono .pin {
   fill: currentColor;
 }
-.mono .pinCore {
-  fill: var(--brand);
+
+/* منارة المدرج ذهبية في كل النسخ. */
+.origin {
+  fill: var(--accent);
 }

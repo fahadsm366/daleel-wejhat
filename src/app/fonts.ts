@@ -1,11 +1,11 @@
-import { IBM_Plex_Mono, IBM_Plex_Sans_Arabic, Readex_Pro } from "next/font/google";
+import { Alexandria, IBM_Plex_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 
 // الخطوط مستضافة ذاتياً عبر next/font، وتُربط بمتغيرات design/tokens.css نفسها.
 // تُطبَّق الأصناف على <body> حتى تتقدّم على قيم :root الاحتياطية في tokens.css.
 
-export const fontDisplay = Readex_Pro({
+export const fontDisplay = Alexandria({
   subsets: ["arabic", "latin"],
-  weight: ["500", "600", "700"],
+  weight: ["500", "700"],
   display: "swap",
   variable: "--font-display",
   fallback: ["Tahoma", "sans-serif"],

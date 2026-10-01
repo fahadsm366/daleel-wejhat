@@ -12,8 +12,13 @@ export function SiteHeader() {
     <header className={styles.header}>
       <div className="container">
         <Link href="/" className={styles.home}>
-          <Logo variant="mono" size={40} />
-          <span className={styles.name}>{t("name")}</span>
+          <Logo size={40} />
+          <span className={styles.names}>
+            <span className={styles.name}>{t("name")}</span>
+            <span className={styles.nameEn} lang="en" dir="ltr">
+              {t("nameEn")}
+            </span>
+          </span>
         </Link>
       </div>
     </header>

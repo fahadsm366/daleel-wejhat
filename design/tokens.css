@@ -1,22 +1,25 @@
-/* دليل الوجهات — design tokens. Source of truth: design/tokens.json */
+/* دليل الوجهات — design tokens. Source of truth: design/tokens.json
+   الهوية مأخوذة من هوية شركة فلاي أوفر كونتيننتس (foc.com.sa): سماء صباحية، كحلي الارتفاع العالي،
+   لون مسار الرحلة، ومنارة المدرج الذهبية للإشارة فقط. */
 
 :root {
-  --brand: #0E5A4F;
-  --brand-deep: #0A3F38;
-  --on-brand: #FFFFFF;
-  --accent: #E3A21A;
-  --accent-ink: #8A5E00;
-  --surface-100: #F4F7F6;
-  --surface-200: #FFFFFF;
-  --ink: #13201D;
-  --muted: #566763;
-  --line: #D6E0DD;
-  --entry-free: #2E7D4F;
+  --brand: #1C6E8C;          /* لون مسار الرحلة */
+  --brand-deep: #12263A;     /* كحلي الارتفاع العالي: رأس وتذييل وأسطح كبيرة */
+  --on-brand: #FFFFFF;       /* النص فوق brand و accent */
+  --on-brand-deep: #FFFFFF;  /* النص فوق brand-deep (فاتح دائماً) */
+  --accent: #D9962B;         /* منارة المدرج: نقاط ومؤشرات فقط، ليس للنص */
+  --accent-ink: #8A5A12;     /* نص ذهبي على الخلفيات الفاتحة */
+  --surface-100: #EAF0F4;    /* أرضية الصفحة: سماء صباحية */
+  --surface-200: #FFFFFF;    /* البطاقات */
+  --ink: #12263A;
+  --muted: #4A5D70;
+  --line: #CFDAE3;
+  --entry-free: #2A7549;
   --entry-eta: #2F6FA8;
   --entry-visa: #A4432F;
-  --focus: #E3A21A;
+  --focus: #A86F12;
 
-  --font-display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --font-display: "Alexandria", "IBM Plex Sans Arabic", Tahoma, sans-serif;
   --font-sans: "IBM Plex Sans Arabic", Tahoma, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
@@ -26,48 +29,50 @@
   --space-12: 48px;
 
   --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-md: 14px;
   --radius-full: 9999px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --brand: #4FB8A6;
-    --brand-deep: #0B2B26;
-    --on-brand: #0B1A17;
-    --accent: #F0B43C;
-    --accent-ink: #F0B43C;
-    --surface-100: #0F1716;
-    --surface-200: #16211F;
-    --ink: #E6EEEC;
-    --muted: #9DB0AB;
-    --line: #26332F;
+    --brand: #5FB4D3;
+    --brand-deep: #081320;
+    --on-brand: #0C1B2A;
+    --on-brand-deep: #FFFFFF;
+    --accent: #E9AE4A;
+    --accent-ink: #E9AE4A;
+    --surface-100: #0C1B2A;
+    --surface-200: #12263A;
+    --ink: #E6EEF4;
+    --muted: #A3B6C7;
+    --line: #24394E;
     --entry-free: #6FCB95;
-    --entry-eta: #7DB3E6;
-    --entry-visa: #E88A74;
-    --focus: #F0B43C;
+    --entry-eta: #86B9EA;
+    --entry-visa: #EE9682;
+    --focus: #E9AE4A;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --brand: #4FB8A6;
-  --brand-deep: #0B2B26;
-  --on-brand: #0B1A17;
-  --accent: #F0B43C;
-  --accent-ink: #F0B43C;
-  --surface-100: #0F1716;
-  --surface-200: #16211F;
-  --ink: #E6EEEC;
-  --muted: #9DB0AB;
-  --line: #26332F;
+  --brand: #5FB4D3;
+  --brand-deep: #081320;
+  --on-brand: #0C1B2A;
+  --on-brand-deep: #FFFFFF;
+  --accent: #E9AE4A;
+  --accent-ink: #E9AE4A;
+  --surface-100: #0C1B2A;
+  --surface-200: #12263A;
+  --ink: #E6EEF4;
+  --muted: #A3B6C7;
+  --line: #24394E;
   --entry-free: #6FCB95;
-  --entry-eta: #7DB3E6;
-  --entry-visa: #E88A74;
-  --focus: #F0B43C;
+  --entry-eta: #86B9EA;
+  --entry-visa: #EE9682;
+  --focus: #E9AE4A;
   color-scheme: dark;
 }
 
 html { direction: rtl; }
-body { background: var(--surface-100); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 26px; }
-h1, h2, h3 { font-family: var(--font-display); }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+body { background: var(--surface-100); color: var(--ink); font-family: var(--font-sans); font-size: 17px; line-height: 1.85; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.35; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }

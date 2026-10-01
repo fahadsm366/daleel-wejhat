@@ -12,8 +12,13 @@ export function SiteFooter() {
     <footer className={styles.footer}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.brand}>
-          <Logo size={28} />
-          <span>{tSite("name")}</span>
+          <Logo variant="mono" size={32} />
+          <span className={styles.names}>
+            <span className={styles.name}>{tSite("name")}</span>
+            <span className={styles.nameEn} lang="en" dir="ltr">
+              {tSite("nameEn")}
+            </span>
+          </span>
         </div>
         <p className={styles.disclaimer}>
           <span className={styles.disclaimerTitle}>{t("disclaimerTitle")} </span>

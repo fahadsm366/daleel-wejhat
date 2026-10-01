@@ -1,10 +1,9 @@
-/* surface-200 وليس brand-deep: brand-deep مع on-brand لا يُقرآن في الوضع الداكن. */
+/* brand-deep مع on-brand-deep: كحلي ونص فاتح في الوضعين. */
 .footer {
   margin-block-start: var(--space-12);
-  padding-block: var(--space-6);
-  background: var(--surface-200);
-  border-block-start: 1px solid var(--line);
-  color: var(--muted);
+  padding-block: var(--space-12) var(--space-6);
+  background: var(--brand-deep);
+  color: color-mix(in srgb, var(--on-brand-deep) 80%, transparent);
 }
 
 .inner {
@@ -16,9 +15,28 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--ink);
+  color: var(--on-brand-deep);
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.nameEn {
+  align-self: flex-start;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
 }
 
 .disclaimer {
@@ -26,7 +44,7 @@
 }
 
 .disclaimerTitle {
-  color: var(--ink);
+  color: var(--on-brand-deep);
   font-weight: 600;
 }
 
@@ -34,4 +52,8 @@
   font-size: 13px;
   line-height: 20px;
   font-weight: 500;
+}
+
+.footer a {
+  color: var(--on-brand-deep);
 }
